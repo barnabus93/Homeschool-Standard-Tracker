@@ -44,6 +44,13 @@
   </div>
 </div>
 
+<nav class="main-nav">
+  <button class="nav-tab active" onclick="showView('home',this)">🌿 Home</button>
+  <button class="nav-tab" onclick="showView('attendance',this)">🗓️ Attendance</button>
+</nav>
+
+<div id="view-home">
+
 <div class="grade-bar">
   <button class="grade-tab active" onclick="setGradeFilter('all',this)">All Grades</button>
   <button class="grade-tab" onclick="setGradeFilter('K',this)">Kindergarten</button>
@@ -97,9 +104,19 @@
 
 </div>
 
+</div><!-- /#view-home -->
+
+<!-- ATTENDANCE VIEW (rendered by js/attendance.js) -->
+<div id="view-attendance" hidden>
+  <div class="main">
+    <div id="attendance-root"></div>
+  </div>
+</div>
+
 <!-- Milestone data and render logic (classic scripts share top-level scope) -->
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
+<script src="js/attendance.js"></script>
 <!-- Firebase sync runs as a deferred module after the classic scripts above -->
 <script type="module" src="js/firebase.js"></script>
 </body>

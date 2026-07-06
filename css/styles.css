@@ -472,6 +472,126 @@ body{
 ::-webkit-scrollbar-track{background:var(--cream-dark);}
 ::-webkit-scrollbar-thumb{background:var(--parchment);border-radius:3px;}
 
+/* ── MAIN NAV (Home / Attendance menu) ── */
+.main-nav{
+  background:var(--sage-dark);
+  display:flex;gap:4px;
+  padding:0 24px;
+}
+.nav-tab{
+  background:none;border:none;cursor:pointer;
+  padding:12px 18px 11px;
+  font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,0.7);
+  border-bottom:3px solid transparent;
+  transition:color .15s,border-color .15s;
+  white-space:nowrap;
+}
+.nav-tab:hover:not(.active){color:#fff;}
+.nav-tab.active{color:#fff;border-bottom-color:var(--gold-light);}
+
+/* ── ATTENDANCE ── */
+.att-seg{
+  display:inline-flex;
+  background:var(--cream-dark);
+  border:1px solid var(--parchment);
+  border-radius:var(--radius-sm);
+  padding:3px;margin-bottom:16px;
+}
+.att-seg-btn{
+  background:none;border:none;cursor:pointer;
+  padding:6px 16px;border-radius:5px;
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;
+  color:var(--text-soft);transition:all .15s;
+}
+.att-seg-btn.active{background:#fff;color:var(--sage-dark);box-shadow:var(--shadow-sm);}
+
+.att-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:14px;
+}
+.att-nav-btn{
+  background:#fff;border:1px solid var(--parchment);
+  border-radius:50%;width:34px;height:34px;flex-shrink:0;
+  font-size:18px;line-height:1;color:var(--sage-dark);cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.att-nav-btn:hover{background:var(--sage-pale);border-color:var(--sage-light);}
+.att-period{
+  flex:1;text-align:center;
+  font-family:'Playfair Display',serif;
+  font-size:16px;color:var(--text-dark);
+}
+
+/* calendar grid (Month view) */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.cal-head{
+  text-align:center;font-size:10px;font-weight:700;
+  color:var(--text-muted);letter-spacing:.5px;
+  text-transform:uppercase;padding:4px 0;
+}
+.cal-cell{
+  position:relative;min-height:52px;
+  background:#fff;border:1px solid var(--parchment);
+  border-radius:var(--radius-sm);cursor:pointer;padding:5px 6px;
+  transition:background .12s,border-color .12s,transform .05s;
+}
+.cal-cell:hover:not(.blank){border-color:var(--sage-light);background:var(--cream-dark);}
+.cal-cell:active:not(.blank){transform:scale(.97);}
+.cal-cell.blank{background:transparent;border-color:transparent;cursor:default;}
+.cal-num{font-size:12px;color:var(--text-soft);}
+.cal-cell.present{background:var(--sage-pale);border-color:var(--sage-light);}
+.cal-cell.present .cal-num{color:var(--sage-dark);font-weight:700;}
+.cal-mark{position:absolute;bottom:4px;right:6px;font-size:16px;color:var(--sage-dark);font-weight:700;}
+.cal-cell.today{border-color:var(--gold);border-width:2px;}
+
+/* week list (Week view) */
+.week-list{display:flex;flex-direction:column;gap:8px;}
+.week-row{
+  display:flex;align-items:center;gap:12px;
+  background:#fff;border:1px solid var(--parchment);
+  border-radius:var(--radius);padding:12px 16px;cursor:pointer;
+  transition:background .12s,border-color .12s;
+}
+.week-row:hover{border-color:var(--sage-light);background:var(--cream-dark);}
+.week-row.present{background:var(--sage-pale);border-color:var(--sage-light);}
+.week-row.today{border-left:4px solid var(--gold);}
+.week-day{font-family:'Playfair Display',serif;font-size:14px;color:var(--text-dark);flex:1;}
+.week-date{font-size:12px;color:var(--text-soft);}
+.week-check{font-size:12px;font-weight:600;color:var(--text-muted);min-width:90px;text-align:right;}
+.week-row.present .week-check{color:var(--sage-dark);}
+
+/* day card (Day view) */
+.day-card{
+  background:#fff;border:1px solid var(--parchment);
+  border-radius:14px;padding:28px 20px;text-align:center;
+  box-shadow:var(--shadow);
+}
+.day-weekday{font-family:'Playfair Display',serif;font-size:20px;color:var(--text-dark);}
+.day-date{font-size:13px;color:var(--text-soft);margin-top:2px;margin-bottom:20px;}
+.day-toggle{
+  background:var(--cream-dark);
+  border:2px dashed var(--parchment);
+  border-radius:var(--radius);
+  padding:18px 24px;width:100%;max-width:280px;
+  font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;
+  color:var(--text-soft);cursor:pointer;transition:all .15s;
+}
+.day-toggle:hover{border-color:var(--sage-light);color:var(--text-mid);}
+.day-toggle.present{background:var(--sage);border-style:solid;border-color:var(--sage-dark);color:#fff;}
+
+/* summary + exports */
+.att-summary{
+  margin:18px 0 14px;
+  font-family:'Lora',serif;font-style:italic;
+  font-size:13px;color:var(--text-mid);text-align:center;
+}
+.att-export{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.att-export .btn-done{padding:10px 18px;font-size:13px;}
+.att-csv{background:var(--gold)!important;}
+.att-csv:hover{background:var(--gold-light)!important;}
+.att-note{text-align:center;font-size:11px;color:var(--text-muted);margin-top:12px;}
+
 /* ── MOBILE (≤640px): declutter & ease navigation ── */
 @media (max-width:640px){
   body{font-size:13.5px;}
@@ -534,4 +654,17 @@ body{
   .grade-group-label{padding:8px 13px 4px;}
 
   .encouragement{padding:14px 15px;margin-top:20px;}
+
+  /* Menu + attendance */
+  .main-nav{padding:0 8px;}
+  .nav-tab{padding:11px 16px 10px;font-size:13px;flex:1;text-align:center;}
+  .att-seg{display:flex;width:100%;}
+  .att-seg-btn{flex:1;padding:8px 6px;}
+  .att-period{font-size:14.5px;}
+  .cal-grid{gap:3px;}
+  .cal-head{font-size:9px;}
+  .cal-cell{min-height:44px;padding:3px 4px;}
+  .cal-num{font-size:11px;}
+  .cal-mark{font-size:13px;bottom:2px;right:4px;}
+  .att-export .btn-done{flex:1;}
 }

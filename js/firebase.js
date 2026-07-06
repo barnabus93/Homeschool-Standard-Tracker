@@ -41,6 +41,7 @@ function scheduleSave() {
         statuses: window.statuses,
         openSubjects: window.openSubjects,
         expandedGroups: window.expandedGroups,
+        attendance: window.attendance,
         lastUpdated: Date.now()
       });
       setSyncStatus("saved");
@@ -61,20 +62,24 @@ async function loadFromFirestore() {
       if (data.statuses)       Object.assign(window.statuses, data.statuses);
       if (data.openSubjects)   Object.assign(window.openSubjects, data.openSubjects);
       if (data.expandedGroups) Object.assign(window.expandedGroups, data.expandedGroups);
+      if (data.attendance)   { window.attendance = window.attendance || {}; Object.assign(window.attendance, data.attendance); }
     }
     setSyncStatus("saved");
   } catch(e) {
     console.error("Load failed:", e);
     setSyncStatus("offline");
   }
-  // renderAll is defined in the regular script below; by the time
-  // this async function resolves, both scripts will have run.
+  // renderAll / renderAttendance are defined in the classic scripts; by the
+  // time this async function resolves, those scripts will have run.
   if (typeof window.renderAll === 'function') window.renderAll();
+  if (typeof window.renderAttendance === 'function') window.renderAttendance();
 }
 
 // ── EXPOSE GLOBALS so inline onclick handlers can call them ──
 // State lives in the regular script as let vars; we access via window refs.
 // renderAll is also exposed on window once the regular script runs.
+// Attendance handlers (js/attendance.js) call scheduleSave to persist changes.
+window.scheduleSave = scheduleSave;
 window.setStatus      = function(id, val) {
   window.statuses[id] = val;
   window.renderAll();
