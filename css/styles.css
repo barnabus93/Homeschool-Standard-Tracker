@@ -625,6 +625,47 @@ body{
 .act-delete{color:var(--rose)!important;border-color:var(--rose-pale)!important;}
 .act-delete:hover{background:var(--rose-pale)!important;}
 
+/* Photo attachments (in the activity form) */
+.act-photo-hint{font-family:'Lora',serif;font-style:italic;font-size:12.5px;color:var(--text-muted);}
+.act-photo-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px;}
+.act-photo-thumb{
+  position:relative;width:84px;height:84px;flex-shrink:0;
+  border-radius:var(--radius-sm);overflow:hidden;
+  border:1.5px solid var(--parchment);background:var(--cream-dark);
+}
+.act-photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.act-photo-remove{
+  position:absolute;top:3px;right:3px;
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(58,46,34,0.65);border:none;color:#fff;
+  font-size:11px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.act-photo-remove:hover{background:rgba(58,46,34,0.85);}
+.act-photo-add{
+  width:84px;height:84px;flex-shrink:0;
+  background:var(--cream-dark);border:1.5px dashed var(--parchment);
+  border-radius:var(--radius-sm);cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:11px;font-weight:600;
+  color:var(--text-soft);text-align:center;padding:4px;
+  transition:border-color .15s,color .15s;
+}
+.act-photo-add:hover{border-color:var(--sage-light);color:var(--sage-dark);}
+.act-photo-add:disabled{opacity:.6;cursor:default;}
+
+/* Photo mini-strip (activity summary cards in list mode) */
+.act-photo-strip{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.act-photo-mini{
+  width:36px;height:36px;border-radius:5px;object-fit:cover;
+  border:1px solid var(--parchment);flex-shrink:0;
+}
+.act-photo-more{
+  font-size:11px;font-weight:600;color:var(--text-soft);
+  background:var(--cream-dark);border-radius:5px;
+  padding:0 6px;height:36px;display:flex;align-items:center;
+}
+
 /* ── MOBILE (≤640px): declutter & ease navigation ── */
 @media (max-width:640px){
   body{font-size:13.5px;}
@@ -708,4 +749,5 @@ body{
   .m-btns{flex-wrap:wrap;justify-content:flex-end;}
   .act-form{padding:14px;}
   .act-form-btns .btn-done,.act-form-btns .btn-snooze{flex:1;}
+  .act-photo-thumb,.act-photo-add{width:72px;height:72px;}
 }

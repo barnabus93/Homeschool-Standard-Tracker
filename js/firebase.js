@@ -1,6 +1,7 @@
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDasbXp_VKykDHzs_O7yM0szlUqTl52VeU",
@@ -14,6 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const DOC_REF = doc(db, "tracker", "oliver");
+const storage = getStorage(app);
 
 // ── SYNC STATUS INDICATOR ──
 function setSyncStatus(state) {
@@ -78,6 +80,20 @@ async function loadFromFirestore() {
   if (typeof window.renderAttendance === 'function') window.renderAttendance();
   if (typeof window.renderActivities === 'function') window.renderActivities();
 }
+
+// ── ACTIVITY PHOTOS (Firebase Storage) ──
+// Only small metadata (url/path) is stored in Firestore; the image bytes
+// themselves live in Storage. Requires Cloud Storage to be enabled and its
+// Security Rules published in the Firebase console (see README.md).
+window.uploadActivityPhoto = async function(path, blob) {
+  const sRef = ref(storage, path);
+  await uploadBytes(sRef, blob, { contentType: "image/jpeg" });
+  return await getDownloadURL(sRef);
+};
+window.deleteActivityPhoto = async function(path) {
+  const sRef = ref(storage, path);
+  await deleteObject(sRef);
+};
 
 // ── EXPOSE GLOBALS so inline onclick handlers can call them ──
 // State lives in the regular script as let vars; we access via window refs.

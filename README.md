@@ -99,6 +99,37 @@ To point the app at your own Firebase project:
    document down (for example, behind Firebase Authentication) is recommended
    before sharing the URL publicly.
 
+## 📸 Photo uploads (Firebase Storage)
+
+Activities support attaching photos (e.g. a work sample), using the device's
+native "Photo Library / Take Photo" picker. Photos are compressed client-side
+before upload, then stored in **Firebase Storage** — only a small URL/path
+record is kept in Firestore, since Firestore documents are capped at 1MB and
+can't hold image bytes.
+
+This needs a one-time setup step, similar to the Firestore Rules above:
+
+1. In the [Firebase console](https://console.firebase.google.com/), open your
+   project → **Build → Storage** → **Get started**, and create the default
+   bucket if you haven't already.
+2. Go to the **Rules** tab and publish rules scoped to the app's upload path:
+   ```
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       match /activity-photos/{allPaths=**} {
+         allow read, write: if true;
+       }
+     }
+   }
+   ```
+   This mirrors the Firestore setup: private-by-URL, no login required, since
+   this is a tool used only within one family.
+3. That's it — no code changes needed. Until this step is done, adding a
+   photo will show a "could not be uploaded" alert; check the browser console
+   for the underlying error (usually `storage/unauthorized` or a missing
+   bucket) if it doesn't work as expected.
+
 ## 📜 License
 
 Released under the [MIT License](LICENSE).
