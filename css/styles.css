@@ -330,7 +330,9 @@ body{
 }
 .milestone-row:last-child{border-bottom:none;}
 .milestone-row:hover{background:var(--cream-dark);}
-.milestone-row.state-done{background:#F4FAF4;}
+/* Mastered rows stay in place, grayed out, rather than moving to a separate list. */
+.milestone-row.state-done{background:var(--cream-dark);opacity:.6;}
+.milestone-row.state-done:hover{opacity:.85;}
 .milestone-row.state-working{background:var(--gold-pale);}
 
 .m-check{
@@ -341,12 +343,12 @@ body{
   font-size:11px;font-weight:700;
   transition:all .15s;
 }
-.state-done .m-check{background:var(--sage);border-color:var(--sage-dark);color:#fff;}
+.state-done .m-check{background:var(--sage-light);border-color:var(--sage-light);color:#fff;}
 .state-working .m-check{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);}
 
 .m-body{flex:1;}
 .m-text{font-size:13px;color:var(--text-dark);line-height:1.4;}
-.state-done .m-text{color:var(--sage-dark);}
+.state-done .m-text{color:var(--text-muted);text-decoration:line-through;text-decoration-color:var(--text-muted);}
 .m-meta{display:flex;align-items:center;gap:6px;margin-top:4px;}
 .m-code{
   font-size:10px;background:var(--cream-dark);
@@ -367,35 +369,8 @@ body{
 .m-btn:hover{background:var(--cream-dark);color:var(--text-dark);}
 .m-btn.working{border-color:var(--gold);color:var(--gold);background:var(--gold-pale);}
 .m-btn.done{border-color:var(--sage);color:var(--sage-dark);background:var(--sage-pale);}
-
-/* ── COMPLETED ── */
-.completed-section{margin-top:10px;}
-.completed-list{display:flex;flex-direction:column;gap:0;}
-.completed-item{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 14px;
-  border-bottom:1px solid var(--parchment-light);
-  background:#F5FAF5;
-}
-.completed-item:first-child{border-radius:var(--radius) var(--radius) 0 0;}
-.completed-item:last-child{border-radius:0 0 var(--radius) var(--radius);border-bottom:none;}
-.completed-check{
-  width:18px;height:18px;border-radius:50%;
-  background:var(--sage);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;color:#fff;font-weight:700;
-}
-.completed-text{
-  font-size:12.5px;color:var(--sage-dark);flex:1;
-  text-decoration:line-through;text-decoration-color:var(--sage-light);
-}
-.completed-grade{font-size:10px;color:var(--text-muted);}
-.completed-undo{
-  background:none;border:none;cursor:pointer;
-  font-size:11px;color:var(--text-muted);padding:2px 6px;
-  transition:color .1s;
-}
-.completed-undo:hover{color:var(--text-soft);}
+.m-btn.activities-btn{border-color:var(--sky);color:var(--sky);}
+.m-btn.activities-btn:hover{background:var(--sky-pale);}
 
 .empty-state{
   text-align:center;padding:28px;
@@ -592,6 +567,64 @@ body{
 .att-csv:hover{background:var(--gold-light)!important;}
 .att-note{text-align:center;font-size:11px;color:var(--text-muted);margin-top:12px;}
 
+/* ── ACTIVITIES (per-standard lesson log) ── */
+.back-btn{
+  background:none;border:none;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;
+  color:var(--sage-dark);padding:6px 0;margin-bottom:14px;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.back-btn:hover{color:var(--sage);}
+
+.std-ref-card{
+  background:#fff;border:1.5px solid var(--parchment);
+  border-radius:var(--radius);padding:16px 18px;
+  margin-bottom:22px;box-shadow:var(--shadow-sm);
+}
+.std-ref-card .card-text{margin-bottom:4px;}
+
+.act-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.act-card{
+  background:#fff;border:1.5px solid var(--parchment);
+  border-radius:var(--radius);padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+}
+.act-card-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  gap:10px;margin-bottom:6px;
+}
+.act-name{font-family:'Playfair Display',serif;font-size:14px;color:var(--text-dark);}
+.act-date{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.act-preview{
+  font-family:'Lora',serif;font-style:italic;font-size:12.5px;
+  color:var(--text-soft);line-height:1.5;margin-bottom:10px;
+}
+.act-card-btns{display:flex;gap:6px;}
+.act-add-btn{width:100%;margin-bottom:22px;}
+
+.act-form{
+  background:#fff;border:1.5px solid var(--parchment);
+  border-radius:var(--radius);padding:18px;margin-bottom:20px;
+}
+.act-label{
+  display:block;font-size:12px;font-weight:700;
+  color:var(--text-mid);margin:14px 0 5px;
+}
+.act-label:first-child{margin-top:0;}
+.act-label .req{color:var(--rose);}
+.act-input,.act-textarea{
+  width:100%;
+  font-family:'Nunito',sans-serif;font-size:13px;color:var(--text-dark);
+  background:var(--cream);border:1.5px solid var(--parchment);
+  border-radius:var(--radius-sm);padding:9px 11px;
+  transition:border-color .15s;
+}
+.act-input:focus,.act-textarea:focus{outline:none;border-color:var(--sage-light);}
+.act-textarea{min-height:64px;resize:vertical;line-height:1.45;}
+.act-form-btns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.act-delete{color:var(--rose)!important;border-color:var(--rose-pale)!important;}
+.act-delete:hover{background:var(--rose-pale)!important;}
+
 /* ── MOBILE (≤640px): declutter & ease navigation ── */
 @media (max-width:640px){
   body{font-size:13.5px;}
@@ -667,4 +700,12 @@ body{
   .cal-num{font-size:11px;}
   .cal-mark{font-size:13px;bottom:2px;right:4px;}
   .att-export .btn-done{flex:1;}
+
+  /* Activities */
+  .std-ref-card{padding:13px 14px;}
+  .act-card{padding:12px 13px;}
+  .act-card-head{flex-direction:column;gap:2px;}
+  .m-btns{flex-wrap:wrap;justify-content:flex-end;}
+  .act-form{padding:14px;}
+  .act-form-btns .btn-done,.act-form-btns .btn-snooze{flex:1;}
 }

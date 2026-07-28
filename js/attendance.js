@@ -143,11 +143,14 @@ window.attNav = function(dir){
 window.showView = function(name, btn){
   const home=document.getElementById('view-home');
   const att =document.getElementById('view-attendance');
+  const acts=document.getElementById('view-activities');
   const isHome = name==='home';
   if(home) home.hidden=!isHome;
   if(att)  att.hidden=isHome;
-  document.querySelectorAll('.main-nav .nav-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+  if(acts) acts.hidden=true;
+  document.querySelectorAll('.main-nav .nav-tab').forEach(b=>{
+    b.classList.toggle('active', btn ? b===btn : b.dataset.view===name);
+  });
   if(!isHome) renderAttendance();
   window.scrollTo(0,0);
 };

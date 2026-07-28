@@ -4,6 +4,9 @@ window.statuses       = window.statuses       || {};
 window.gradeFilter    = window.gradeFilter    || 'all';
 window.openSubjects   = window.openSubjects   || {};
 window.expandedGroups = window.expandedGroups || {};
+// Initialized here (not in js/activities.js) so it's guaranteed to exist
+// before this file's own renderAll() call below reads activity counts.
+window.activities     = window.activities     || {};
 
 // Local aliases so existing code reads naturally
 // These are REFERENCES to the window objects, so mutations are shared
@@ -78,7 +81,10 @@ function renderAll(){
   if(working_items.length===0){
     activeEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-text">Mark milestones as "Working" below and they'll appear here.</div></div>`;
   } else {
-    activeEl.innerHTML = working_items.map(m=>`
+    activeEl.innerHTML = working_items.map(m=>{
+      const actCount = (window.activities[m.id]||[]).length;
+      const actLabel = '📋 Activities'+(actCount?' ('+actCount+')':'');
+      return `
       <div class="active-card">
         <div class="card-icon">${m.icon}</div>
         <div class="card-body">
@@ -88,16 +94,15 @@ function renderAll(){
         </div>
         <div class="card-actions">
           <button class="btn-done" onclick="setStatus('${m.id}','done')">Mark Done ✓</button>
+          <button class="btn-snooze" onclick="showActivities('${m.id}')">${actLabel}</button>
           <button class="btn-snooze" onclick="setStatus('${m.id}','none')">Remove</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   // accordion
   renderAccordion(ms);
-
-  // completed
-  renderCompleted(ms);
 }
 
 function renderAccordion(ms){
@@ -117,7 +122,9 @@ function renderAccordion(ms){
 
   let html = '';
   subjects.forEach(subj=>{
-    const subjItems = ms.filter(m=>m.subject===subj.name && getStatus(m.id)!=='done');
+    // Mastered items stay in place (grayed out via .state-done) instead of
+    // being filtered out to a separate completed list.
+    const subjItems = ms.filter(m=>m.subject===subj.name);
     if(subjItems.length===0) return;
     const doneCount = ms.filter(m=>m.subject===subj.name && getStatus(m.id)==='done').length;
     const totalCount = ms.filter(m=>m.subject===subj.name).length;
@@ -196,6 +203,19 @@ function milestoneRowHtml(m){
   const s = getStatus(m.id);
   const stateClass = s==='done'?'state-done':s==='working'?'state-working':'';
   const checkContent = s==='done'?'✓':s==='working'?'~':'';
+  const actCount = (window.activities[m.id]||[]).length;
+  const actLabel = '📋 Activities'+(actCount?' ('+actCount+')':'');
+
+  let stateBtns;
+  if(s==='done'){
+    stateBtns = `<button class="m-btn" onclick="event.stopPropagation();setStatus('${m.id}','none')">↺ Undo</button>`;
+  } else {
+    stateBtns = (s!=='working'
+      ? `<button class="m-btn" onclick="event.stopPropagation();setStatus('${m.id}','working')">Working</button>`
+      : '')
+      + `<button class="m-btn" onclick="event.stopPropagation();setStatus('${m.id}','done')">Done ✓</button>`;
+  }
+
   return `<div class="milestone-row ${stateClass}" onclick="cycleStatus('${m.id}')">
     <div class="m-check">${checkContent}</div>
     <div class="m-body">
@@ -206,32 +226,14 @@ function milestoneRowHtml(m){
       </div>
     </div>
     <div class="m-btns">
-      ${s!=='working'?`<button class="m-btn${s==='working'?' working':''}" onclick="event.stopPropagation();setStatus('${m.id}','working')">Working</button>`:''}
-      ${s!=='done'?`<button class="m-btn${s==='done'?' done':''}" onclick="event.stopPropagation();setStatus('${m.id}','done')">Done ✓</button>`:''}
+      ${stateBtns}
+      <button class="m-btn activities-btn" onclick="event.stopPropagation();showActivities('${m.id}')">${actLabel}</button>
     </div>
   </div>`;
 }
 
 // toggleGroup and toggleSubject defined as window.* in the Firebase module (js/firebase.js).
-
-function renderCompleted(ms){
-  const doneItems = ms.filter(m=>statuses[m.id]==='done');
-  const section = document.getElementById('completed-section');
-  const list = document.getElementById('completed-list');
-  if(doneItems.length===0){
-    section.style.display='none';
-    return;
-  }
-  section.style.display='block';
-  const gradeNames = {K:'Kindergarten',1:'1st Grade',2:'2nd Grade'};
-  list.innerHTML = doneItems.map(m=>`
-    <div class="completed-item">
-      <div class="completed-check">✓</div>
-      <div class="completed-text">${m.text}</div>
-      <div class="completed-grade">${gradeNames[m.grade]}</div>
-      <button class="completed-undo" onclick="setStatus('${m.id}','none')">undo</button>
-    </div>`).join('');
-}
+// showActivities defined as window.* in js/activities.js.
 
 // ── INIT ──
 // Expose renderAll on window so the Firebase module can call it after loading data.

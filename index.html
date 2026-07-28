@@ -45,8 +45,8 @@
 </div>
 
 <nav class="main-nav">
-  <button class="nav-tab active" onclick="showView('home',this)">🌿 Home</button>
-  <button class="nav-tab" onclick="showView('attendance',this)">🗓️ Attendance</button>
+  <button class="nav-tab active" data-view="home" onclick="showView('home',this)">🌿 Home</button>
+  <button class="nav-tab" data-view="attendance" onclick="showView('attendance',this)">🗓️ Attendance</button>
 </nav>
 
 <div id="view-home">
@@ -88,12 +88,6 @@
   <div class="section-title" style="margin-bottom:14px;">All Milestones by Subject</div>
   <div id="accordion-container"></div>
 
-  <!-- COMPLETED -->
-  <div class="completed-section" id="completed-section" style="display:none;">
-    <div class="section-title" style="margin-bottom:12px;">✦ Completed Milestones</div>
-    <div class="completed-list" id="completed-list" style="border:1px solid var(--parchment);border-radius:var(--radius);"></div>
-  </div>
-
   <div class="encouragement">
     <div class="enc-icon">🌻</div>
     <div>
@@ -113,10 +107,18 @@
   </div>
 </div>
 
+<!-- ACTIVITIES VIEW (rendered by js/activities.js; opened per-standard) -->
+<div id="view-activities" hidden>
+  <div class="main">
+    <div id="activities-root"></div>
+  </div>
+</div>
+
 <!-- Milestone data and render logic (classic scripts share top-level scope) -->
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/attendance.js"></script>
+<script src="js/activities.js"></script>
 <!-- Firebase sync runs as a deferred module after the classic scripts above -->
 <script type="module" src="js/firebase.js"></script>
 </body>
