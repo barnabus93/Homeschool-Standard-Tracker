@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Little Learner Tracker — Alabama K–2nd Grade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-icon">🌿</div>
+  <div class="header-text">
+    <div class="header-title">Little Learner Tracker</div>
+    <div class="header-sub">Homeschool Milestone Dashboard</div>
+  </div>
+  <div class="header-state">📍 Alabama Course of Study</div>
+</div>
+
+<div class="student-bar">
+  <div class="avatar">O</div>
+  <div class="student-info">
+    <div class="student-name">Oliver</div>
+    <div class="student-meta">Age 4–5 · Pre-K → Kindergarten → 2nd Grade</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+    <div class="hdr-stats">
+      <div class="hdr-stat">
+        <span class="hdr-stat-num" id="stat-done">0</span>
+        <span class="hdr-stat-lbl">Mastered</span>
+      </div>
+      <div class="hdr-stat">
+        <span class="hdr-stat-num" id="stat-working">0</span>
+        <span class="hdr-stat-lbl">In Progress</span>
+      </div>
+      <div class="hdr-stat">
+        <span class="hdr-stat-num" id="stat-total">0</span>
+        <span class="hdr-stat-lbl">Total</span>
+      </div>
+    </div>
+    <div id="sync-status" style="font-size:11px;color:var(--text-muted);text-align:right;">Loading…</div>
+  </div>
+</div>
+
+<nav class="main-nav">
+  <button class="nav-tab active" data-view="home" onclick="showView('home',this)">🌿 Home</button>
+  <button class="nav-tab" data-view="attendance" onclick="showView('attendance',this)">🗓️ Attendance</button>
+</nav>
+
+<div id="view-home">
+
+<div class="grade-bar">
+  <button class="grade-tab active" onclick="setGradeFilter('all',this)">All Grades</button>
+  <button class="grade-tab" onclick="setGradeFilter('K',this)">Kindergarten</button>
+  <button class="grade-tab" onclick="setGradeFilter('1',this)">1st Grade</button>
+  <button class="grade-tab" onclick="setGradeFilter('2',this)">2nd Grade</button>
+</div>
+
+<div class="main">
+
+  <!-- PROGRESS HERO -->
+  <div class="progress-hero">
+    <div class="progress-hero-title">
+      Overall Progress
+      <span id="progress-fraction">0 of 0 milestones met</span>
+    </div>
+    <div class="big-bar-wrap">
+      <div class="big-bar-fill" id="big-bar" style="width:0%"></div>
+    </div>
+    <div class="progress-pct" id="progress-pct">0% complete</div>
+    <div class="sub-bars" id="sub-bars"></div>
+  </div>
+
+  <!-- ACTIVE / IN PROGRESS -->
+  <div class="active-section">
+    <div class="section-title gold-accent">Active Milestones — Working On It Now</div>
+    <div class="active-cards" id="active-cards">
+      <div class="empty-state">
+        <div class="empty-icon">🌱</div>
+        <div class="empty-text">Mark milestones as "Working" below and they'll appear here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL MILESTONES -->
+  <div class="section-title" style="margin-bottom:14px;">All Milestones by Subject</div>
+  <div id="accordion-container"></div>
+
+  <div class="encouragement">
+    <div class="enc-icon">🌻</div>
+    <div>
+      <div class="enc-title">A Note on These Milestones</div>
+      <div class="enc-text">These milestones reflect the Alabama Course of Study (ELA 2021, Math 2019) — the same standards used in Alabama public schools. In homeschooling, they serve as guideposts, not a strict timeline. Every child's pace is different. Progress made with joy and curiosity counts more than any checkbox.</div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /#view-home -->
+
+<!-- ATTENDANCE VIEW (rendered by js/attendance.js) -->
+<div id="view-attendance" hidden>
+  <div class="main">
+    <div id="attendance-root"></div>
+  </div>
+</div>
+
+<!-- ACTIVITIES VIEW (rendered by js/activities.js; opened per-standard) -->
+<div id="view-activities" hidden>
+  <div class="main">
+    <div id="activities-root"></div>
+  </div>
+</div>
+
+<!-- Milestone data and render logic (classic scripts share top-level scope) -->
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/attendance.js"></script>
+<script src="js/activities.js"></script>
+<!-- Firebase sync runs as a deferred module after the classic scripts above -->
+<script type="module" src="js/firebase.js"></script>
+</body>
+</html>
