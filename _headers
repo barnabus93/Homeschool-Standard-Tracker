@@ -1,0 +1,6 @@
+# Netlify header rules: since js/css filenames don't change between deploys
+# (no content hashing), browsers can otherwise keep serving a stale cached
+# copy after a new version goes live. Forcing revalidation means visitors
+# always get the latest build without needing a manual hard refresh.
+/*
+  Cache-Control: no-cache, must-revalidate
