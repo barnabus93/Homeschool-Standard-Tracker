@@ -14,13 +14,16 @@
 window.activities = window.activities || {};
 
 let actMilestoneId = null;   // which standard's activities are open
-let actMode = 'list';        // 'list' | 'form'
-let actEditingId = null;     // activity id being edited, or null when adding
+let actMode = 'list';        // 'list' | 'view' | 'form'
+let actActivityId = null;    // activity id being viewed/edited, or null in list mode / when adding
 let actReturnView = 'home';  // which top-level view to restore on Back
-let actPhotoUploading = false; // true while a photo is compressing/uploading
+let actPhotoUploading = false; // true while a photo/PDF is compressing/uploading
 
+// New fields are purely additive: existing saved activities simply don't have
+// them yet and render as blank until edited — nothing is migrated or rewritten.
 const ACT_FIELDS = [
   {key:'name', label:'Activity Name', type:'input', required:true, placeholder:'e.g., Writing practice worksheet'},
+  {key:'description', label:'Description', type:'textarea', placeholder:'Describe this activity in more detail'},
   {key:'teacherMaterials', label:'Teacher Materials', type:'textarea', placeholder:'What you need to prepare or bring'},
   {key:'studentMaterials', label:'Student Materials', type:'textarea', placeholder:'What Oliver needs'},
   {key:'books', label:'Books', type:'textarea', placeholder:'Related books'},
@@ -82,6 +85,39 @@ function resizeImageToBlob(file, maxDim, quality){
   });
 }
 
+// Photos and PDFs share one "attachments" array (still called `photos` on the
+// record, unchanged, so existing saved activities keep working). An entry is
+// treated as a PDF only when explicitly marked type:'pdf'; anything else
+// (including older entries saved before PDFs existed, which have no `type`
+// at all) is treated as an image, preserving old data exactly as it renders.
+function isPdfAttachment(p){
+  return !!p && p.type === 'pdf';
+}
+
+// Small (36px) preview used in the activity list's summary strip.
+function attachmentMiniHtml(p){
+  if(isPdfAttachment(p)){
+    return '<a class="act-photo-mini act-file-mini" href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" title="'+escapeHtml(p.name||'PDF')+'">📄</a>';
+  }
+  return '<img class="act-photo-mini" src="'+escapeHtml(p.url)+'" alt="Activity photo">';
+}
+
+// Larger (84px) tile used in the form's editable grid and the read-only view.
+// Every tile opens the file in a new tab; `removable` adds the ✕ button.
+function attachmentTileHtml(p, removable){
+  const isPdf = isPdfAttachment(p);
+  const inner = isPdf
+    ? '<div class="act-file-icon">📄<span class="act-file-name">'+escapeHtml(p.name||'PDF')+'</span></div>'
+    : '<img src="'+escapeHtml(p.url)+'" alt="Activity photo">';
+  const removeBtn = removable
+    ? '<button type="button" class="act-photo-remove" onclick="removeActivityPhoto(\''+p.id+'\')" aria-label="Remove photo">✕</button>'
+    : '';
+  return '<div class="act-photo-thumb'+(isPdf?' act-file-tile':'')+'">'
+       +   '<a href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener">'+inner+'</a>'
+       +   removeBtn
+       + '</div>';
+}
+
 // ── RENDER ──
 function renderActivitiesView(){
   const root=document.getElementById('activities-root');
@@ -99,7 +135,9 @@ function renderActivitiesView(){
     +   '<div class="card-std">AL COS '+escapeHtml(m.code)+' · '+escapeHtml(m.tag)+'</div>'
     + '</div>';
 
-  const body = actMode==='form' ? activityFormHtml(m) : activityListHtml(m);
+  const body = actMode==='form' ? activityFormHtml(m)
+             : actMode==='view' ? activityViewHtml(m)
+             : activityListHtml(m);
 
   root.innerHTML =
       '<button class="back-btn" onclick="backToStandards()">‹ Back to Standards</button>'
@@ -120,7 +158,7 @@ function activityListHtml(m){
       const photos = a.photos || [];
       const photoStrip = photos.length ? (
           '<div class="act-photo-strip">'
-        +   photos.slice(0,3).map(p=>'<img class="act-photo-mini" src="'+escapeHtml(p.url)+'" alt="Activity photo">').join('')
+        +   photos.slice(0,3).map(attachmentMiniHtml).join('')
         +   (photos.length>3 ? '<span class="act-photo-more">+'+(photos.length-3)+'</span>' : '')
         + '</div>'
       ) : '';
@@ -132,6 +170,7 @@ function activityListHtml(m){
         +   (preview ? '<div class="act-preview">'+preview+(truncated?'…':'')+'</div>' : '')
         +   photoStrip
         +   '<div class="act-card-btns">'
+        +     '<button class="m-btn" onclick="viewActivity(\''+a.id+'\')">View</button>'
         +     '<button class="m-btn" onclick="editActivity(\''+a.id+'\')">Edit</button>'
         +     '<button class="m-btn" onclick="deleteActivity(\''+a.id+'\')">Delete</button>'
         +   '</div>'
@@ -143,9 +182,49 @@ function activityListHtml(m){
        + '<button class="btn-done act-add-btn" onclick="addActivity()">+ Add Activity</button>';
 }
 
+// Read-only detail view of one activity — everything filled in, plus its
+// photos/PDFs, without switching into the editable form.
+function activityViewHtml(m){
+  const list = window.activities[m.id] || [];
+  const a = list.find(function(x){ return x.id===actActivityId; });
+  if(!a){
+    return '<button class="back-btn" onclick="backToActivityList()">‹ Back to Activities</button>'
+      + '<div class="empty-state"><div class="empty-icon">🤔</div><div class="empty-text">That activity could not be found.</div></div>';
+  }
+
+  const viewFields = ACT_FIELDS.filter(function(f){ return f.key!=='name'; }).map(function(f){
+    const val = a[f.key];
+    if(!val) return '';
+    return '<div class="act-view-field">'
+      +   '<div class="act-view-label">'+f.label+'</div>'
+      +   '<div class="act-view-value">'+escapeHtml(val)+'</div>'
+      + '</div>';
+  }).join('');
+
+  const photos = a.photos || [];
+  const attachmentsSection = photos.length ? (
+      '<div class="act-view-field">'
+    +   '<div class="act-view-label">Photos &amp; Files</div>'
+    +   '<div class="act-photo-grid">' + photos.map(function(p){ return attachmentTileHtml(p, false); }).join('') + '</div>'
+    + '</div>'
+  ) : '';
+
+  return '<button class="back-btn" onclick="backToActivityList()">‹ Back to Activities</button>'
+    + '<div class="section-title gold-accent">'+escapeHtml(a.name||'(untitled activity)')+'</div>'
+    + '<div class="act-view-meta">Updated '+fmtActDate(a.updatedAt||a.createdAt)+'</div>'
+    + '<div class="act-view-card">'
+    +   (viewFields || '<div class="act-photo-hint">No additional details recorded yet.</div>')
+    +   attachmentsSection
+    + '</div>'
+    + '<div class="act-form-btns">'
+    +   '<button class="btn-done" onclick="editActivity(\''+a.id+'\')">✎ Edit</button>'
+    +   '<button class="btn-snooze act-delete" onclick="deleteActivity(\''+a.id+'\')">Delete</button>'
+    + '</div>';
+}
+
 function activityFormHtml(m){
   const list = window.activities[m.id] || [];
-  const existing = actEditingId ? list.find(a=>a.id===actEditingId) : null;
+  const existing = actActivityId ? list.find(a=>a.id===actActivityId) : null;
 
   const fields = ACT_FIELDS.map(f=>{
     const val = existing ? (existing[f.key]||'') : '';
@@ -156,24 +235,19 @@ function activityFormHtml(m){
     return '<label class="act-label">'+f.label+reqMark+'</label>'+control;
   }).join('');
 
-  // Photos attach to an already-saved activity (so there's always a stable
-  // id/path to key on); a brand-new, not-yet-saved activity shows a hint
-  // instead until the first Save.
+  // Photos/PDFs attach to an already-saved activity (so there's always a
+  // stable id/path to key on); a brand-new, not-yet-saved activity shows a
+  // hint instead until the first Save.
   const photosSection = existing ? (
-      '<label class="act-label">Photos</label>'
+      '<label class="act-label">Photos &amp; Files</label>'
     + '<div class="act-photo-grid">'
-    +   (existing.photos||[]).map(p=>
-          '<div class="act-photo-thumb">'
-        +   '<img src="'+escapeHtml(p.url)+'" alt="Activity photo">'
-        +   '<button type="button" class="act-photo-remove" onclick="removeActivityPhoto(\''+p.id+'\')" aria-label="Remove photo">✕</button>'
-        + '</div>'
-        ).join('')
+    +   (existing.photos||[]).map(function(p){ return attachmentTileHtml(p, true); }).join('')
     +   '<button type="button" class="act-photo-add"'+(actPhotoUploading?' disabled':'')+' onclick="triggerPhotoPicker()">'
-    +     (actPhotoUploading ? 'Uploading…' : '📷 Add Photo')
+    +     (actPhotoUploading ? 'Uploading…' : '📎 Add Photo/PDF')
     +   '</button>'
     + '</div>'
-    + '<input type="file" accept="image/*" id="act-photo-input" style="display:none" onchange="handlePhotoFile(event)">'
-  ) : '<label class="act-label">Photos</label><div class="act-photo-hint">Save this activity to add photos.</div>';
+    + '<input type="file" accept="image/*,application/pdf" id="act-photo-input" style="display:none" onchange="handlePhotoFile(event)">'
+  ) : '<label class="act-label">Photos &amp; Files</label><div class="act-photo-hint">Save this activity to add photos or PDFs.</div>';
 
   return '<div class="section-title gold-accent">'+(existing?'Edit Activity':'New Activity')+'</div>'
     + '<div class="act-form">'
@@ -191,7 +265,7 @@ function activityFormHtml(m){
 window.showActivities = function(milestoneId){
   actMilestoneId = milestoneId;
   actMode = 'list';
-  actEditingId = null;
+  actActivityId = null;
 
   const home = document.getElementById('view-home');
   const att  = document.getElementById('view-attendance');
@@ -217,20 +291,31 @@ window.backToStandards = function(){
 // ── CRUD ──
 window.addActivity = function(){
   actMode = 'form';
-  actEditingId = null;
+  actActivityId = null;
   renderActivitiesView();
 };
 
 window.editActivity = function(id){
   actMode = 'form';
-  actEditingId = id;
+  actActivityId = id;
+  renderActivitiesView();
+};
+
+window.viewActivity = function(id){
+  actMode = 'view';
+  actActivityId = id;
+  renderActivitiesView();
+  window.scrollTo(0,0);
+};
+
+window.backToActivityList = function(){
+  actMode = 'list';
+  actActivityId = null;
   renderActivitiesView();
 };
 
 window.cancelActivityForm = function(){
-  actMode = 'list';
-  actEditingId = null;
-  renderActivitiesView();
+  window.backToActivityList();
 };
 
 window.saveActivityForm = function(){
@@ -244,8 +329,8 @@ window.saveActivityForm = function(){
 
   const list = window.activities[actMilestoneId] = window.activities[actMilestoneId] || [];
   const now = Date.now();
-  const isNewRecord = !actEditingId;
-  let record = actEditingId ? list.find(a=>a.id===actEditingId) : null;
+  const isNewRecord = !actActivityId;
+  let record = actActivityId ? list.find(a=>a.id===actActivityId) : null;
   if(!record){
     record = {id: genLocalId('act'), createdAt: now};
     list.push(record);
@@ -260,10 +345,10 @@ window.saveActivityForm = function(){
   if(isNewRecord){
     // Stay on the form (now editing this just-created record) so photos can
     // be attached right away instead of bouncing back to the list.
-    actEditingId = record.id;
+    actActivityId = record.id;
   } else {
     actMode = 'list';
-    actEditingId = null;
+    actActivityId = null;
   }
 
   renderActivitiesView();
@@ -279,7 +364,7 @@ window.deleteActivity = function(id){
   window.activities[actMilestoneId] = list.filter(a=>a.id!==id);
 
   actMode = 'list';
-  actEditingId = null;
+  actActivityId = null;
   renderActivitiesView();
   if(typeof window.renderAll === 'function') window.renderAll();
   if(typeof window.scheduleSave === 'function') window.scheduleSave();
@@ -305,24 +390,35 @@ window.triggerPhotoPicker = function(){
 window.handlePhotoFile = function(event){
   const file = event.target.files && event.target.files[0];
   event.target.value = ''; // reset so picking the same file again still fires change
-  if(!file || !actEditingId) return;
+  if(!file || !actActivityId) return;
+
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
 
   actPhotoUploading = true;
   renderActivitiesView();
 
-  resizeImageToBlob(file, 1600, 0.8)
+  // PDFs upload as-is (compression only applies to images).
+  const prep = isPdf ? Promise.resolve(file) : resizeImageToBlob(file, 1600, 0.8);
+
+  prep
     .then(function(blob){
       if(typeof window.uploadActivityPhoto !== 'function'){
-        throw new Error('Photo uploads are not available yet.');
+        throw new Error('Uploads are not available yet.');
       }
       const photoId = genLocalId('photo');
-      const path = 'activity-photos/'+actMilestoneId+'/'+actEditingId+'/'+photoId+'.jpg';
-      return window.uploadActivityPhoto(path, blob).then(function(url){
+      const path = 'activity-photos/'+actMilestoneId+'/'+actActivityId+'/'+photoId+(isPdf?'.pdf':'.jpg');
+      const contentType = isPdf ? 'application/pdf' : 'image/jpeg';
+      return window.uploadActivityPhoto(path, blob, contentType).then(function(url){
         const list = window.activities[actMilestoneId] || [];
-        const record = list.find(function(a){ return a.id===actEditingId; });
+        const record = list.find(function(a){ return a.id===actActivityId; });
         if(record){
           record.photos = record.photos || [];
-          record.photos.push({id: photoId, url: url, path: path, uploadedAt: Date.now()});
+          record.photos.push({
+            id: photoId, url: url, path: path,
+            type: isPdf ? 'pdf' : 'image',
+            name: file.name || '',
+            uploadedAt: Date.now()
+          });
           record.updatedAt = Date.now();
         }
       });
@@ -331,8 +427,8 @@ window.handlePhotoFile = function(event){
       if(typeof window.scheduleSave === 'function') window.scheduleSave();
     })
     .catch(function(e){
-      console.error('Photo upload failed:', e);
-      alert('Sorry, that photo could not be uploaded. Please try again.');
+      console.error('Upload failed:', e);
+      alert('Sorry, that file could not be uploaded. Please try again.');
     })
     .finally(function(){
       actPhotoUploading = false;
@@ -343,7 +439,7 @@ window.handlePhotoFile = function(event){
 
 window.removeActivityPhoto = function(photoId){
   const list = window.activities[actMilestoneId] || [];
-  const record = list.find(function(a){ return a.id===actEditingId; });
+  const record = list.find(function(a){ return a.id===actActivityId; });
   if(!record || !record.photos) return;
   const photo = record.photos.find(function(p){ return p.id===photoId; });
   if(!photo) return;

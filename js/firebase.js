@@ -81,13 +81,14 @@ async function loadFromFirestore() {
   if (typeof window.renderActivities === 'function') window.renderActivities();
 }
 
-// ── ACTIVITY PHOTOS (Firebase Storage) ──
-// Only small metadata (url/path) is stored in Firestore; the image bytes
-// themselves live in Storage. Requires Cloud Storage to be enabled and its
-// Security Rules published in the Firebase console (see README.md).
-window.uploadActivityPhoto = async function(path, blob) {
+// ── ACTIVITY PHOTOS & FILES (Firebase Storage) ──
+// Only small metadata (url/path) is stored in Firestore; the file bytes
+// (images or PDFs) themselves live in Storage. Requires Cloud Storage to be
+// enabled and its Security Rules published in the Firebase console (see
+// README.md).
+window.uploadActivityPhoto = async function(path, blob, contentType) {
   const sRef = ref(storage, path);
-  await uploadBytes(sRef, blob, { contentType: "image/jpeg" });
+  await uploadBytes(sRef, blob, { contentType: contentType || "image/jpeg" });
   return await getDownloadURL(sRef);
 };
 window.deleteActivityPhoto = async function(path) {
