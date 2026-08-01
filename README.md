@@ -34,8 +34,6 @@ and keep everything in sync across devices via Firebase Firestore.
 │   ├── data.js             # MILESTONES array (the Alabama COS standards)
 │   ├── app.js              # State, filtering, stats, and rendering
 │   └── firebase.js         # Firebase init + Firestore load/save (ES module)
-├── .github/workflows/
-│   └── deploy.yml          # GitHub Pages auto-deploy
 ├── LICENSE
 └── README.md
 ```
@@ -69,15 +67,11 @@ python3 -m http.server 8000
 Opening `index.html` directly via `file://` mostly works, but using a local
 server avoids browser restrictions on ES modules.
 
-## ☁️ Deployment (GitHub Pages)
+## ☁️ Deployment
 
-This repo ships with a GitHub Actions workflow
-(`.github/workflows/deploy.yml`) that publishes the site to **GitHub Pages** on
-every push to `main`.
-
-To enable it: in the repository **Settings → Pages**, set **Source** to
-**GitHub Actions**. After the next push, your site will be live at
-`https://<owner>.github.io/<repo>/`.
+This site is hosted on **Netlify**, connected directly to this GitHub repo.
+Pushes to `main` trigger a production deploy automatically; open pull
+requests get their own deploy-preview URL.
 
 ## 🔥 Firebase setup
 
