@@ -35,12 +35,14 @@ const ACT_FIELDS = [
 
 const ACT_GRADE_NAMES = {K:'Kindergarten',1:'1st Grade',2:'2nd Grade'};
 
-function escapeHtml(s){
-  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+// escapeHtml is defined once in js/app.js and shared via classic-script scope.
 
+// Checks official milestones first, then user-created custom standards
+// (js/custom.js) so the Activities log works identically for both.
 function getMilestoneById(id){
-  return (typeof MILESTONES!=='undefined' ? MILESTONES : []).find(m=>m.id===id);
+  const official = (typeof MILESTONES!=='undefined' ? MILESTONES : []).find(m=>m.id===id);
+  if(official) return official;
+  return (window.customStandards||[]).find(c=>c.id===id);
 }
 
 function genLocalId(prefix){
@@ -128,11 +130,16 @@ function renderActivitiesView(){
     return;
   }
 
+  const isCustom = m.subject === 'Custom Standards';
+  const badgeLine = isCustom
+    ? escapeHtml('Custom Standard · '+(m.tag||'Uncategorized'))
+    : escapeHtml((ACT_GRADE_NAMES[m.grade]||m.grade)+' · '+m.subject);
+  const metaLine = isCustom ? escapeHtml(m.code||'') : escapeHtml('AL COS '+m.code+' · '+m.tag);
   const refCard =
       '<div class="std-ref-card">'
-    +   '<div class="card-grade-badge">'+escapeHtml((ACT_GRADE_NAMES[m.grade]||m.grade)+' · '+m.subject)+'</div>'
+    +   '<div class="card-grade-badge">'+badgeLine+'</div>'
     +   '<div class="card-text">'+escapeHtml(m.text)+'</div>'
-    +   '<div class="card-std">AL COS '+escapeHtml(m.code)+' · '+escapeHtml(m.tag)+'</div>'
+    +   (metaLine ? '<div class="card-std">'+metaLine+'</div>' : '')
     + '</div>';
 
   const body = actMode==='form' ? activityFormHtml(m)

@@ -299,6 +299,7 @@ body{
   user-select:none;
 }
 .subj-header:hover{background:var(--parchment-light);}
+.custom-standards .subj-header{border-left:4px solid var(--gold);}
 .subj-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
 .subj-name{
   font-family:'Playfair Display',serif;

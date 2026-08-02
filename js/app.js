@@ -16,6 +16,14 @@ const expandedGroups = window.expandedGroups;
 
 function getStatus(id){ return statuses[id]||'none'; }
 
+// Defined here (not in js/activities.js, which used to own this) so it's
+// available before this file's own renderAll() call, and so js/custom.js /
+// js/activities.js can all share one copy via classic-script scope instead
+// of redeclaring it (which would throw — they share a global scope).
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 // setStatus, cycleStatus, setGradeFilter, toggleSubject, toggleGroup
 // are defined as window.* in the Firebase module (js/firebase.js) so inline
 // onclick handlers can reach them. Do not redefine here.
@@ -75,8 +83,8 @@ function renderAll(){
   });
   document.getElementById('sub-bars').innerHTML = subHtml;
 
-  // active cards
-  const working_items = ms.filter(m=>statuses[m.id]==='working');
+  // active cards (official milestones + any custom standards marked Working)
+  const working_items = ms.concat(window.customStandards||[]).filter(m=>statuses[m.id]==='working');
   const activeEl = document.getElementById('active-cards');
   if(working_items.length===0){
     activeEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-text">Mark milestones as "Working" below and they'll appear here.</div></div>`;
@@ -84,13 +92,18 @@ function renderAll(){
     activeEl.innerHTML = working_items.map(m=>{
       const actCount = (window.activities[m.id]||[]).length;
       const actLabel = '📋 Activities'+(actCount?' ('+actCount+')':'');
+      const isCustom = m.subject === 'Custom Standards';
+      const badgeText = isCustom
+        ? 'Custom Standard · '+escapeHtml(m.tag||'Uncategorized')
+        : escapeHtml((m.grade==='K'?'Kindergarten':m.grade==='1'?'1st Grade':'2nd Grade')+' · '+m.subject);
+      const stdLine = isCustom ? escapeHtml(m.code||'') : escapeHtml('AL COS '+m.code+' · '+m.tag);
       return `
       <div class="active-card">
         <div class="card-icon">${m.icon}</div>
         <div class="card-body">
-          <div class="card-grade-badge">${m.grade==='K'?'Kindergarten':m.grade==='1'?'1st Grade':'2nd Grade'} · ${m.subject}</div>
-          <div class="card-text">${m.text}</div>
-          <div class="card-std">AL COS ${m.code} · ${m.tag}</div>
+          <div class="card-grade-badge">${badgeText}</div>
+          <div class="card-text">${escapeHtml(m.text)}</div>
+          ${stdLine ? `<div class="card-std">${stdLine}</div>` : ''}
         </div>
         <div class="card-actions">
           <button class="btn-done" onclick="setStatus('${m.id}','done')">Mark Done ✓</button>
@@ -121,6 +134,16 @@ function renderAccordion(ms){
   const MAX     = 5;   // max rows before "… and N more" truncation
 
   let html = '';
+
+  // Custom standards (js/custom.js) render first, above the official
+  // subjects. Guarded with typeof since app.js's own first renderAll() call
+  // runs before js/custom.js has loaded — customStandardsAccordionHtml
+  // simply isn't defined yet on that first pass, and the very next render
+  // (moments later, once Firestore data loads) picks it up correctly.
+  if(typeof customStandardsAccordionHtml === 'function'){
+    html += customStandardsAccordionHtml();
+  }
+
   subjects.forEach(subj=>{
     // Mastered items stay in place (grayed out via .state-done) instead of
     // being filtered out to a separate completed list.
@@ -199,7 +222,10 @@ function renderAccordion(ms){
   }
 }
 
-function milestoneRowHtml(m){
+// extraBtns: optional extra HTML appended into .m-btns (used by js/custom.js
+// to add Edit/Delete buttons for user-created standards, which official
+// milestones don't get).
+function milestoneRowHtml(m, extraBtns){
   const s = getStatus(m.id);
   const stateClass = s==='done'?'state-done':s==='working'?'state-working':'';
   const checkContent = s==='done'?'✓':s==='working'?'~':'';
@@ -219,15 +245,16 @@ function milestoneRowHtml(m){
   return `<div class="milestone-row ${stateClass}" onclick="cycleStatus('${m.id}')">
     <div class="m-check">${checkContent}</div>
     <div class="m-body">
-      <div class="m-text">${m.text}</div>
+      <div class="m-text">${escapeHtml(m.text)}</div>
       <div class="m-meta">
-        <span class="m-code">${m.code}</span>
-        <span class="m-subj-tag">${m.tag}</span>
+        <span class="m-code">${escapeHtml(m.code)}</span>
+        <span class="m-subj-tag">${escapeHtml(m.tag)}</span>
       </div>
     </div>
     <div class="m-btns">
       ${stateBtns}
       <button class="m-btn activities-btn" onclick="event.stopPropagation();showActivities('${m.id}')">${actLabel}</button>
+      ${extraBtns||''}
     </div>
   </div>`;
 }

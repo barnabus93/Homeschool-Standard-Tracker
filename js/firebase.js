@@ -45,6 +45,7 @@ function scheduleSave() {
         expandedGroups: window.expandedGroups,
         attendance: window.attendance,
         activities: window.activities,
+        customStandards: window.customStandards,
         lastUpdated: Date.now()
       });
       setSyncStatus("saved");
@@ -67,6 +68,10 @@ async function loadFromFirestore() {
       if (data.expandedGroups) Object.assign(window.expandedGroups, data.expandedGroups);
       if (data.attendance)   { window.attendance = window.attendance || {}; Object.assign(window.attendance, data.attendance); }
       if (data.activities)   { window.activities = window.activities || {}; Object.assign(window.activities, data.activities); }
+      // customStandards is an array, not a keyed map, so it's replaced
+      // wholesale from the saved copy rather than merged -- safe here since
+      // load always happens before any local edits exist.
+      if (Array.isArray(data.customStandards)) window.customStandards = data.customStandards;
     }
     setSyncStatus("saved");
   } catch(e) {
